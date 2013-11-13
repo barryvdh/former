@@ -63,72 +63,11 @@ class FormerServiceProvider extends ServiceProvider
 
     // Bind classes to container
     $provider = new static($app);
-    $app      = $provider->bindCoreClasses($app);
     $app      = $provider->bindFormer($app);
 
     return $app;
   }
 
-  /**
-   * Bind the core classes to the Container
-   *
-   * @param  Container $app
-   *
-   * @return Container
-   */
-  public function bindCoreClasses(Container $app)
-  {
-    // Core classes
-    //////////////////////////////////////////////////////////////////
-
-    $app->bindIf('files', 'Illuminate\Filesystem\Filesystem');
-    $app->bindIf('url',   'Illuminate\Routing\UrlGenerator');
-
-    // Session and request
-    //////////////////////////////////////////////////////////////////
-
-    $app->bindIf('session.manager', function ($app) {
-      return new SessionManager($app);
-    });
-
-    $app->bindIf('session', function ($app) {
-      return $app['session.manager']->driver('array');
-    }, true);
-
-    $app->bindIf('request', function ($app) {
-      $request = Request::createFromGlobals();
-      $request->setSessionStore($app['session']);
-
-      return $request;
-    }, true);
-
-    // Config
-    //////////////////////////////////////////////////////////////////
-
-    $app->bindIf('config', function ($app) {
-      $fileloader = new ConfigLoader($app['files'], __DIR__.'/../config');
-
-      return new Repository($fileloader, 'config');
-    }, true);
-
-    // Add config namespace
-    $app['config']->package('anahkiasen/former', __DIR__.'/../config');
-
-    // Localization
-    //////////////////////////////////////////////////////////////////
-
-    $app->bindIf('translation.loader', function ($app) {
-      return new FileLoader($app['files'], 'src/config');
-    });
-
-    $app->bindIf('translator', function ($app) {
-      $loader = new FileLoader($app['files'], 'lang');
-
-      return new Translator($loader, 'fr');
-    });
-
-    return $app;
-  }
 
   /**
    * Bind Former classes to the container
@@ -139,6 +78,9 @@ class FormerServiceProvider extends ServiceProvider
    */
   public function bindFormer(Container $app)
   {
+    // Add config namespace
+    $app['config']->package('anahkiasen/former', __DIR__.'/../config');
+    
     // Get framework to use
     $framework = $app['config']->get('former::framework');
 
